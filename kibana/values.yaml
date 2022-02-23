@@ -10,15 +10,17 @@ extraEnvs:
   #- name: "NODE_OPTIONS"
   #  value: "--max-old-space-size=1800"
   - name: "ELASTICSEARCH_USERNAME"
-    valueFrom:
-      secretKeyRef:
-        name: elasticsearch-master-credentials
-        key: username
+    value: "elastic"
+#    valueFrom:
+#      secretKeyRef:
+#        name: elasticsearch-master-credentials
+#        key: username
   - name: "ELASTICSEARCH_PASSWORD"
-    valueFrom:
-      secretKeyRef:
-        name: elasticsearch-master-credentials
-        key: password
+    value: "changemeonce"
+#    valueFrom:
+#      secretKeyRef:
+#        name: elasticsearch-master-credentials
+#        key: password
 #  - name: MY_ENVIRONMENT_VAR
 #    value: the_value_goes_here
 
@@ -127,7 +129,7 @@ service:
   type: NodePort
   loadBalancerIP: ""
   port: 5601
-  nodePort: "30002"
+  nodePort: "30004"
   labels: {}
   annotations: {}
   # cloud.google.com/load-balancer-type: "Internal"
