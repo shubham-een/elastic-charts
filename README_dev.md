@@ -5,4 +5,6 @@
   helm install -f elasticsearch/values-datahot.yaml esdatahot elasticsearch
   helm install -f elasticsearch/values-datawarm.yaml esdatawarm elasticsearch
   helm install eskibana kibana
+
+  helm install -f elasticsearch/values.yaml esstandalone elasticsearch -n elasticsearch
   ```
