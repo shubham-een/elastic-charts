@@ -12,6 +12,7 @@
  3. Create self signed certificate for SSL transport
      ```
      kubectl apply -f certs/certs.yaml -n es-<ClusterName>
+     ex: kubectl apply -f certs/certs.yaml -n es-beta
      ```
  
  4. Deploy the Elastic Search

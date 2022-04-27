@@ -22,24 +22,18 @@ roles:
   - transform
 
 replicas: 3
-minimumMasterNodes: 3
+minimumMasterNodes: 2
+
+esMajorVersion: ""
 
 # Allows you to add any config files in /usr/share/elasticsearch/config/
 # such as elasticsearch.yml and log4j2.properties
-esConfig:
-  elasticsearch.yml: |
-    xpack.license.self_generated.type: basic
-    xpack.monitoring.collection.enabled: true
-    xpack.security.enabled: true
-    xpack.security.transport.ssl.enabled: true
-    xpack.security.transport.ssl.verification_mode: full
-    xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs-gen/keystore.p12
-    xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs-gen/keystore.p12
-    xpack.security.authc:
-      anonymous:
-        username: anonymous 
-        roles: superuser
-        authz_exception: true
+esConfig: {}
+#  elasticsearch.yml: |
+#    key:
+#      nestedkey: value
+#  log4j2.properties: |
+#    key = value
 
 esJvmOptions:
   processors.options: |
@@ -48,28 +42,51 @@ esJvmOptions:
 # Disable it to use your own elastic-credential Secret.
 secret:
   enabled: true
-  password: "" # generated randomly if not defined
+  password: "GaXHAEEQufwgKH2u" # generated randomly if not defined
 
 # A list of secrets and their paths to mount inside the pod
 # This is useful for mounting certificates for security and for mounting
 # the X-Pack license
-secretMounts:
-  - name: elastic-certificates
-    secretName: selfsigned-ca-cert
-    path: /usr/share/elasticsearch/config/certs
+secretMounts: []
+#  - name: elastic-certificates
+#    secretName: elastic-certificates
+#    path: /usr/share/elasticsearch/config/certs
+#    defaultMode: 0755
 
-imagePullSecrets:
-  - name: "uvdockerrepo-secret"
+hostAliases: []
+#- ip: "127.0.0.1"
+#  hostnames:
+#  - "foo.local"
+#  - "bar.local"
 
-esJavaOpts: "-Xms1g -Xmx1g -XX:MaxDirectMemorySize=1g"
+image: "docker.elastic.co/elasticsearch/elasticsearch"
+imageTag: "8.1.0"
+imagePullPolicy: "IfNotPresent"
+
+podAnnotations: {}
+# iam.amazonaws.com/role: es-cluster
+
+# additionals labels
+labels: {}
+
+esJavaOpts: "" # example: "-Xmx1g -Xms1g"
 
 resources:
   requests:
-    cpu: "1700m"
-    memory: "1400Mi"
+    cpu: "1000m"
+    memory: "2Gi"
   limits:
-    cpu: "1700m"
-    memory: "1400Mi"
+    cpu: "1000m"
+    memory: "2Gi"
+
+initResources: {}
+# limits:
+#   cpu: "25m"
+#   # memory: "128Mi"
+# requests:
+#   cpu: "25m"
+#   memory: "128Mi"
+
 
 volumeClaimTemplate:
   accessModes: ["ReadWriteOnce"]
@@ -78,96 +95,33 @@ volumeClaimTemplate:
       storage: 50Gi
   storageClassName: gp3
 
-
-#extraVolumes: []
-extraVolumes:
-  - name: elastic-hunspell
-    emptyDir: {}
-  - name: elastic-synonyms
-    emptyDir: {}
-  - name: tls-certificates
-    emptyDir: {}
+extraVolumes: []
 # - name: extras
 #   emptyDir: {}
 
-#extraVolumeMounts: []
-extraVolumeMounts:
-  - name: elastic-hunspell
-    mountPath: /usr/share/elasticsearch/config/hunspell
-    readOnly: false
-  - name: elastic-synonyms
-    mountPath: /usr/share/elasticsearch/config/synonyms
-    readOnly: false
-  - name: tls-certificates
-    mountPath: /usr/share/elasticsearch/config/certs-gen
+extraVolumeMounts: []
+# - name: extras
+#   mountPath: /usr/share/extras
+#   readOnly: true
 
-extraContainers: []
+extraInitContainers: []
 # - name: do-something
 #   image: busybox
 #   command: ['do', 'something']
 
-#extraInitContainers: []
-extraInitContainers:
-  - name: elasticsearch-custom-config-init
-    image: "uvdeployment/videosearch:search_es_v0.0.2"
-    imagePullPolicy: "IfNotPresent"
-    volumeMounts:
-      - name:  elastic-hunspell
-        mountPath: /tmp/hunspell
-      - name:  elastic-synonyms
-        mountPath: /tmp/synonyms
-    command:
-      - bash
-      - -c
-      - |
-        cp -rf /usr/src/app/hunspell/*  /tmp/hunspell
-        cp -rf /usr/src/app/synonyms/*  /tmp/synonyms
-
-  - name: setup-tls-cert
-    image: "docker.elastic.co/elasticsearch/elasticsearch:7.16.2"
-    command:
-    - sh
-    - -c
-    - |
-      #!/usr/bin/env bash
-      set -euo pipefail
-      elasticsearch-certutil cert \
-        --name ${NODE_NAME} \
-        --days 1000 \
-        --ip ${POD_IP} \
-        --dns ${NODE_NAME},${POD_SERVICE_NAME},${POD_SERVICE_NAME_HEADLESS},${NODE_NAME}.${POD_SERVICE_NAME},${NODE_NAME}.${POD_SERVICE_NAME_HEADLESS} \
-        --ca-cert /usr/share/elasticsearch/config/certs/tls.crt \
-        --ca-key /usr/share/elasticsearch/config/certs/tls.key  \
-        --ca-pass "" \
-        --pass "" \
-        --out /usr/share/elasticsearch/config/certs-gen/keystore.p12
-    env:
-    - name: NODE_NAME
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.name
-    - name: POD_IP
-      valueFrom:
-        fieldRef:
-          fieldPath: status.podIP
-    - name: POD_SERVICE_NAME
-      value: "es-beta-master"
-    - name: POD_SERVICE_NAME_HEADLESS
-      value: "es-beta-master-headless"
-    volumeMounts:
-    - name: elastic-certificates
-      mountPath: /usr/share/elasticsearch/config/certs
-    - name: tls-certificates
-      mountPath: /usr/share/elasticsearch/config/certs-gen
+protocol: https
+httpPort: 9200
+transportPort: 9300
 
 service:
+  enabled: true
   type: NodePort
+  # Consider that all endpoints are considered "ready" even if the Pods themselves are not
+  # https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec
+  publishNotReadyAddresses: false
   nodePort: "30013"
 
 # This is the max unavailable setting for the pod disruption budget
 # The default value of 1 will make sure that kubernetes won't allow more than 1
 # of your pods to be unavailable during maintenance
 maxUnavailable: 1
-
-nodeSelector: 
-   node-class: es-beta
