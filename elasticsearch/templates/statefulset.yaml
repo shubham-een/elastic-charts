@@ -344,7 +344,7 @@ spec:
           - name: xpack.security.transport.ssl.enabled
             value: "true"
           - name: xpack.security.http.ssl.enabled
-            value: "true"
+            value: "false"
           - name: xpack.security.transport.ssl.verification_mode
             value: "certificate"
           - name: xpack.security.transport.ssl.key
