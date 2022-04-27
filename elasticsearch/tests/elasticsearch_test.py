@@ -72,7 +72,7 @@ def test_defaults():
     assert c["readinessProbe"]["timeoutSeconds"] == 5
 
     assert "curl" in c["readinessProbe"]["exec"]["command"][-1]
-    assert "http://127.0.0.1:9200" in c["readinessProbe"]["exec"]["command"][-1]
+    assert "https://127.0.0.1:9200" in c["readinessProbe"]["exec"]["command"][-1]
 
     # Resources
     assert c["resources"] == {
@@ -118,6 +118,7 @@ def test_defaults():
     assert s["metadata"]["name"] == uname
     assert s["metadata"]["annotations"] == {}
     assert s["spec"]["type"] == "ClusterIP"
+    assert s["spec"]["publishNotReadyAddresses"] == False
     assert len(s["spec"]["ports"]) == 2
     assert s["spec"]["ports"][0] == {"name": "http", "port": 9200, "protocol": "TCP"}
     assert s["spec"]["ports"][1] == {
@@ -451,9 +452,10 @@ secretMounts:
         "mountPath": "/usr/share/elasticsearch/config/certs",
         "name": "elastic-certificates",
     }
-    assert s["volumes"] == [
-        {"name": "elastic-certificates", "secret": {"secretName": "elastic-certs"}}
-    ]
+    assert {
+        "name": "elastic-certificates",
+        "secret": {"secretName": "elastic-certs"},
+    } in s["volumes"]
 
 
 def test_adding_a_secret_mount_with_subpath():
@@ -805,12 +807,12 @@ persistence:
 """
     r = helm_template(config)
     assert "volumeClaimTemplates" not in r["statefulset"][uname]["spec"]
-    assert (
-        r["statefulset"][uname]["spec"]["template"]["spec"]["containers"][0][
-            "volumeMounts"
-        ]
-        == None
-    )
+    assert {
+        "name": "elasticsearch-master",
+        "mountPath": "/usr/share/elasticsearch/data",
+    } not in r["statefulset"][uname]["spec"]["template"]["spec"]["containers"][0][
+        "volumeMounts"
+    ]
 
 
 def test_priority_class_name():
@@ -860,6 +862,17 @@ service:
     r = helm_template(config)
 
     assert uname not in r["service"]
+
+
+def test_enabling_service_publishNotReadyAddresses():
+    config = """
+    service:
+      publishNotReadyAddresses: true
+    """
+
+    r = helm_template(config)
+
+    assert r["service"][uname]["spec"]["publishNotReadyAddresses"] == True
 
 
 def test_adding_a_nodePort():
@@ -1117,13 +1130,6 @@ labels:
 
 
 def test_keystore_enable():
-    config = ""
-
-    r = helm_template(config)
-    s = r["statefulset"][uname]["spec"]["template"]["spec"]
-
-    assert s["volumes"] == None
-
     config = """
 keystore:
   - secretName: test
@@ -1465,7 +1471,11 @@ networkPolicy:
         {"podSelector": {"matchLabels": {"app": "elasticsearch-master"}}},
     ]
     assert transport["ports"][0]["port"] == 9300
-    assert pod_selector == {"matchLabels": {"app": "elasticsearch-master",}}
+    assert pod_selector == {
+        "matchLabels": {
+            "app": "elasticsearch-master",
+        }
+    }
 
 
 def test_default_automount_sa_token():

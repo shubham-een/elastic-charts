@@ -47,11 +47,13 @@ hostAliases: []
 #  - "bar.local"
 
 image: "docker.elastic.co/kibana/kibana"
-imageTag: "7.16.2"
+imageTag: "8.1.0"
 imagePullPolicy: "IfNotPresent"
 
 # additionals labels
 labels: {}
+
+annotations: {}
 
 podAnnotations: {}
 # iam.amazonaws.com/role: es-cluster
@@ -112,12 +114,13 @@ extraVolumeMounts:
   #   mountPath: /usr/share/extras
   #   readOnly: true
   #
-extraContainers: ""
+
+extraContainers: []
 # - name: dummy-init
 #   image: busybox
 #   command: ['echo', 'hey']
 
-extraInitContainers: ""
+extraInitContainers: []
 # - name: dummy-init
 #   image: busybox
 #   command: ['echo', 'hey']
