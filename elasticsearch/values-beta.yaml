@@ -48,30 +48,6 @@ secret:
   enabled: true
   password: "changemeonce" # generated randomly if not defined
 
-# A list of secrets and their paths to mount inside the pod
-# This is useful for mounting certificates for security and for mounting
-# the X-Pack license
-secretMounts: []
-#  - name: elastic-certificates
-#    secretName: elastic-certificates
-#    path: /usr/share/elasticsearch/config/certs
-#    defaultMode: 0755
-
-hostAliases: []
-#- ip: "127.0.0.1"
-#  hostnames:
-#  - "foo.local"
-#  - "bar.local"
-
-image: "docker.elastic.co/elasticsearch/elasticsearch"
-imageTag: "8.1.0"
-imagePullPolicy: "IfNotPresent"
-
-podAnnotations: {}
-# iam.amazonaws.com/role: es-cluster
-
-# additionals labels
-labels: {}
 
 imagePullSecrets:
   - name: "uvdockerrepo-secret"
@@ -157,3 +133,6 @@ service:
 # The default value of 1 will make sure that kubernetes won't allow more than 1
 # of your pods to be unavailable during maintenance
 maxUnavailable: 1
+
+nodeSelector: 
+   node-class: es-beta
