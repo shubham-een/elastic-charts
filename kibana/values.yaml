@@ -10,7 +10,7 @@ extraEnvs:
   #- name: "NODE_OPTIONS"
   #  value: "--max-old-space-size=1800"
   - name: "ELASTICSEARCH_USERNAME"
-    value: "elastic"
+    value: "kibana_system"
 #    valueFrom:
 #      secretKeyRef:
 #        name: elasticsearch-master-credentials
@@ -61,7 +61,7 @@ podAnnotations: {}
 resources:
   requests:
     cpu: "500m"
-    memory: "1000Mi"
+    memory: "500Mi"
   limits:
     cpu: "1000m"
     memory: "1500Mi"
@@ -70,11 +70,16 @@ protocol: http
 
 serverHost: "0.0.0.0"
 
-healthCheckPath: "/app/kibana"
+healthCheckPath: "/api/status"
 
 # Allows you to add any config files in /usr/share/kibana/config/
 # such as kibana.yml
-kibanaConfig: {}
+#kibanaConfig: {}
+kibanaConfig:
+  kibana.yml: |
+    xpack.encryptedSavedObjects.encryptionKey: "min-32-byte-long-strong-encryption-key"
+    xpack.security.encryptionKey: "min-32-byte-long-strong-encryption-key"
+    xpack.reporting.encryptionKey: "min-32-byte-long-strong-encryption-key"
 #   kibana.yml: |
 #     key:
 #       nestedkey: value

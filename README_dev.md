@@ -12,12 +12,13 @@
  3. Create self signed certificate for SSL transport
      ```
      kubectl apply -f certs/certs.yaml -n es-<ClusterName>
+     ex: kubectl apply -f certs/certs.yaml -n es-beta
      ```
  
  4. Deploy the Elastic Search
     ```
     helm install elasticsearch elasticsearch --values elasticsearch/values-<ClusterName>.yaml -n es-<ClusterName> 
-    ex: helm install elasticsearch elasticsearch --values elasticsearch/values-beta.yaml -n es-beta
+    ex: helm install elasticsearch elasticsearch --values elasticsearch/values-beta.yaml --set nodeSelector.node-class=es-beta  -n es-beta
     ```
 
  4. Get password
