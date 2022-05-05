@@ -1,0 +1,45 @@
+version: '3.4'
+
+x-logging: 
+  &default-logging
+  driver: "json-file"
+  options:
+    max-size: 20m
+    max-file: "5"
+
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.1.0
+    restart: always
+    logging: *default-logging
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      discovery.type: single-node
+      xpack.monitoring.collection.enabled: "true"
+      xpack.security.enabled: "false"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/data
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.1.0
+    restart: always
+    logging: *default-logging
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    deploy:
+      mode: replicated
+      replicas: 1
+
+
+volumes:
+    es_data:

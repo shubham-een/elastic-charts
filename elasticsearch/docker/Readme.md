@@ -1,4 +1,4 @@
-## Build Docker Custom ElasticSearch docker image
+## Run ElasticSearch 1 node cluster
 
 ## Build
 
