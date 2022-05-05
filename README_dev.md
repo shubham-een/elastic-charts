@@ -25,9 +25,18 @@
     ```
     kubectl get secrets --namespace=es-<ClusterName>  es-<ClusterName>-master-credentials -ojsonpath='{.data.password}' | base64 -d
     ex: kubectl get secrets --namespace=es-beta es-beta-master-credentials -ojsonpath='{.data.password}' | base64 -d
+    kubectl get secrets --namespace=elasticsearch-test elasticsearch-test-master-credentials -ojsonpath='{.data.password}' | base64 -d
     ```
 
- 5. Deploy the Kibana
+ 5. Update the password of kibana_system user 
+    ```
+    - ssh into an elasticsearch node
+    - RUN:
+      bin/elasticsearch-reset-password --user kibana_system
+    - Note the password, use it in next step.
+    ```
+
+ 6. Deploy the Kibana
     ```
     Set the password in kibana/values.yaml
     helm install kibana kibana --set elasticsearchHosts=<ES master endpoint>  --set service.nodePort=<Node Port> --set nodeSelector.node-class=<Node class> -n es-<ClusterName>
