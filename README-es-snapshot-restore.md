@@ -12,12 +12,14 @@ Elasticsearch
 
     - kubectl create secret generic <es-secret-pwd-name> -n <k8s-namespace> --from-literal=bootstrap.password='<es-password>'
 
+
 5. Use the created secret <s3-secret-name> and <es-secret-pwd-name> in the ES values.yaml file.
+    
+    Deploy ES Helm chart.
+    Sample command[test]:
 
     ```
-    keystore:
-    - secretName: <s3-secret-name>
-    - secretName: <es-secret-pwd-name>
+    helm upgrade --install -f elasticsearch/values-beta.yaml esstandalone elasticsearch -n elasticsearch-test --set service.nodePort=31003 --set nodeSelector.role=estest-server-1a --set nodeSelector.node-class=cpu --set clusterName=elasticsearch-test --set nodeGroup=master --set esJavaOpts="-Xms1g -Xmx1g -XX:MaxDirectMemorySize=1g" --set resources.requests.memory=2Gi --set resources.limits.memory=2Gi --set image=docker.elastic.co/elasticsearch/elasticsearch --set imageTag=8.1.1  --set replicas=1 --set keystore[0].secretName=s3-creds --set keystore[1].secretName=es-password
     ```
 
 6. Create S3 Repository
@@ -40,7 +42,7 @@ Elasticsearch
                 "region":"<aws-bucket-region>"
                 }
             }
-8.  Verify if the repository is connected
+7.  Verify if the repository is connected
     POST /_snapshot/<es-s3-repo-name>/_verify
 
 
