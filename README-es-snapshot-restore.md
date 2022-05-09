@@ -1,5 +1,50 @@
 
-## Add S3 Repository:
+## Add S3 Repository (using k8s-secret):
+Prerequisite:
+1. Create a bucket in S3
+2. Create an AWS IAM Role, IAM User, get access key and secret key
+
+Elasticsearch
+3. Use ES 8.1.1 docker image which has s3-repo plugin installed 
+4. Create k8s secret for s3-cred and bootstrap.password
+
+    - kubectl create secret generic <s3-secret-name> -n <k8s-namespace> --from-literal=s3.client.default.access_key='<aws_access_key>' --from-literal=s3.client.default.secret_key='<aws_secret_key>'
+
+    - kubectl create secret generic <es-secret-pwd-name> -n <k8s-namespace> --from-literal=bootstrap.password='<es-password>'
+
+5. Use the created secret <s3-secret-name> and <es-secret-pwd-name> in the ES values.yaml file.
+
+    ```
+    keystore:
+    - secretName: <s3-secret-name>
+    - secretName: <es-secret-pwd-name>
+    ```
+
+6. Create S3 Repository
+   -  with UI
+        - Open Kibana, Go to Snapshot and Restore
+        - Go to Repositories
+        - Create S3 Repository
+        - Enter:
+            - repo name: '<es-s3-repo-name>'
+            - client: "default"
+            - bucket: '<aws-s3-bucket-name>'
+            - basepath: ""
+        - Submit
+    - With API
+        - PUT _snapshot/<es-s3-repo-name>
+            {
+                "type" : "s3",
+                "settings" : {
+                "bucket" : "<aws-s3-bucket-name>",
+                "region":"<aws-bucket-region>"
+                }
+            }
+8.  Verify if the repository is connected
+    POST /_snapshot/<es-s3-repo-name>/_verify
+
+
+## Add S3 Repository (manual - not recommended):
 1. Create a docker image with aws s3 plugin installed
 2. Use the docker image in es helm chart
 3. Create a bucket in S3

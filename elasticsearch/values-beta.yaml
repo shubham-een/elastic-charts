@@ -135,4 +135,4 @@ service:
 maxUnavailable: 1
 
 nodeSelector: 
-   node-class: es-beta
+  node-class: es-beta
