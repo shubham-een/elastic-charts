@@ -19,7 +19,7 @@ Elasticsearch
     Sample command[test]:
 
     ```
-    helm upgrade --install -f elasticsearch/values-beta.yaml esstandalone elasticsearch -n elasticsearch-test --set service.nodePort=31003 --set nodeSelector.role=estest-server-1a --set nodeSelector.node-class=cpu --set clusterName=elasticsearch-test --set nodeGroup=master --set esJavaOpts="-Xms1g -Xmx1g -XX:MaxDirectMemorySize=1g" --set resources.requests.memory=2Gi --set resources.limits.memory=2Gi --set image=docker.elastic.co/elasticsearch/elasticsearch --set imageTag=8.1.1  --set replicas=1 --set keystore[0].secretName=s3-creds --set keystore[1].secretName=es-password
+    helm upgrade --install -f elasticsearch/values-beta.yaml esstandalone elasticsearch -n elasticsearch-test --set image=docker.elastic.co/elasticsearch/elasticsearch --set imageTag=8.1.1  --set replicas=1 --set keystore[0].secretName=s3-creds --set keystore[1].secretName=es-password
     ```
 
 6. Create S3 Repository
@@ -45,45 +45,6 @@ Elasticsearch
 7.  Verify if the repository is connected
     POST /_snapshot/<es-s3-repo-name>/_verify
 
-
-## Add S3 Repository (manual - not recommended):
-1. Create a docker image with aws s3 plugin installed
-2. Use the docker image in es helm chart
-3. Create a bucket in S3
-4. Create an AWS IAM Role, IAM User, get access key and secret key 
-5. SSH in to ALL the ES nodes
-    - Add aws credentials to elasticsearch-keystore for default client
-    echo '<aws_access_key>' | ./bin/elasticsearch-keystore add --stdin s3.client.default.access_key
-    echo '<aws_secret_key>' | ./bin/elasticsearch-keystore add --stdin s3.client.default.secret_key
-
-    - This should be done in every ES node
-    - TODO: Find alternative as this is not persistent
-
-6. Reload the cluster settings so keystore data will be taken [Important]
-  POST _nodes/reload_secure_settings
-
-7. Create S3 Repository
-   -  with UI
-        - Open Kibana, Go to Snapshot and Restore
-        - Go to Repositories
-        - Create S3 Repository
-        - Enter:
-            - repo name: '<es-s3-repo-name>'
-            - client: "default"
-            - bucket: '<aws-s3-bucket-name>'
-            - basepath: ""
-        - Submit
-    - With API
-        - PUT _snapshot/<es-s3-repo-name>
-            {
-                "type" : "s3",
-                "settings" : {
-                "bucket" : "<aws-s3-bucket-name>",
-                "region":"<aws-bucket-region>"
-                }
-            }
-8.  Verify if the repository is connected
-    POST /_snapshot/<es-s3-repo-name>/_verify
 
 
 ## Create a snapshot
