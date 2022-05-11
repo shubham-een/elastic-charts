@@ -42,3 +42,8 @@
     helm install kibana kibana --set elasticsearchHosts=<ES master endpoint>  --set service.nodePort=<Node Port> --set nodeSelector.node-class=<Node class> -n es-<ClusterName>
     ex: helm install kibana kibana --set elasticsearchHosts=http://es-beta-master:9200  --set service.nodePort=30014 --set nodeSelector.node-class=es-beta -n es-beta
     ```
+
+
+Notes:
+1. ES 8.1.0 was giving error when IAM Service Account was used, hence 8.1.1 is recommended.
+2. TODO: Test with separate Data and Master nodes (Resolve SSL issues if any)
